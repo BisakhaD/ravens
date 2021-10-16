@@ -14,93 +14,33 @@
 # limitations under the License.
 
 """Regression module."""
-
 import tensorflow as tf
 
 
 class Regression(tf.keras.Model):
-  """Regression module."""
+    """Regression module."""
 
-  def __init__(self):
-    """Initialize a 3-layer MLP."""
-    super(Regression, self).__init__()
-    self.fc1 = tf.keras.layers.Dense(
-        units=32,
-        input_shape=(None, 1),
-        kernel_initializer="normal",
-        bias_initializer="normal",
-        activation="relu")
-    self.fc2 = tf.keras.layers.Dense(
-        units=32,
-        kernel_initializer="normal",
-        bias_initializer="normal",
-        activation="relu")
-    self.fc3 = tf.keras.layers.Dense(
-        units=1,
-        kernel_initializer="normal",
-        bias_initializer="normal")
+    def __init__(self):
+        """Initialize a 3-layer MLP."""
+        super(Regression, self).__init__()
+        self.fc1 = tf.keras.layers.Dense(
+            units=32,
+            input_shape=(None, 1),
+            kernel_initializer="normal",
+            bias_initializer="normal",
+            activation="relu")
+        self.fc2 = tf.keras.layers.Dense(
+            units=32,
+            kernel_initializer="normal",
+            bias_initializer="normal",
+            activation="relu")
+        self.fc3 = tf.keras.layers.Dense(
+            units=1,
+            kernel_initializer="normal",
+            bias_initializer="normal")
 
-  def __call__(self, x):
-    return self.fc3(self.fc2(self.fc1(x)))
+    def __call__(self, x):
+        return self.fc3(self.fc2(self.fc1(x)))
 
-
-# class Regression:
-#   """Regression module."""
-
-#   def __init__(self, input_shape, preprocess, use_mdn):
-#     self.preprocess = preprocess
-
-#     resnet = False
-
-#     if resnet:
-#       self.model = DeepConvMLP(input_shape, d_action=6, use_mdn=use_mdn)
-#     else:
-#       self.model = ConvMLP(d_action=6, use_mdn=use_mdn)
-
-#     self.optim = tf.keras.optimizers.Adam(lr=2e-4)
-#     self.metric = tf.keras.metrics.Mean(name='regression_loss')
-#     self.val_metric = tf.keras.metrics.Mean(name='regression_loss_validate')
-
-#     if not use_mdn:
-#       self.loss_criterion = tf.keras.losses.MeanSquaredError()
-#     else:
-#       self.loss_criterion = mdn_utils.mdn_loss
-
-#   def set_batch_size(self, batch_size):
-#     self.model.set_batch_size(batch_size)
-
-#   def forward(self, in_img):
-#     """Forward pass.
-
-#     Args:
-#       in_img: [B, H, W, C]
-
-#     Returns:
-#       output tensor.
-#     """
-#     input_data = self.preprocess(in_img)
-#     in_tensor = tf.convert_to_tensor(input_data, dtype=tf.float32)
-#     output = self.model(in_tensor)
-#     return output
-
-#   def train_pick(self, batch_obs, batch_act, train_step, validate=False):
-#     """Train pick."""
-#     self.metric.reset_states()
-#     self.val_metric.reset_states()
-
-#     input_data = self.preprocess(batch_obs)
-#     in_tensor = tf.convert_to_tensor(input_data, dtype=tf.float32)
-#     loss = train_step(self.model, self.optim, in_tensor, batch_act,
-#                       self.loss_criterion)
-
-#     if not validate:
-#       self.metric(loss)
-#     else:
-#       self.val_metric(loss)
-#     return np.float32(loss)
-
-#   def save(self, fname):
-#     pass
-
-#   def load(self, fname):
-#     pass
+    def call(self, x):
+        return self.fc3(self.fc2(self.fc1(x)))

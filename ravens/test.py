@@ -17,6 +17,8 @@
 
 import os
 import pickle
+import matplotlib.pyplot as plt
+import datetime
 
 from absl import app
 from absl import flags
@@ -26,6 +28,7 @@ from ravens import dataset
 from ravens import tasks
 from ravens.environments.environment import Environment
 import tensorflow as tf
+import time
 
 flags.DEFINE_string('root_dir', '.', '')
 flags.DEFINE_string('data_dir', '.', '')
@@ -88,6 +91,7 @@ def main(unused_argv):
 
     # Run testing and save total rewards with last transition info.
     results = []
+
     for i in range(ds.n_episodes):
       print(f'Test: {i + 1}/{ds.n_episodes}')
       episode, seed = ds.load(i)

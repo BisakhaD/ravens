@@ -16,20 +16,16 @@
 """Environment class."""
 
 import os
-import pkgutil
-import sys
 import tempfile
 import time
 
 import gym
 import numpy as np
 from ravens.tasks import cameras
-from ravens.tasks.grippers import Spatula
 from ravens.utils import pybullet_utils
 from ravens.utils import utils
 
 import pybullet as p
-
 
 PLACE_STEP = 0.0003
 PLACE_DELTA_THRESHOLD = 0.005
@@ -47,8 +43,7 @@ class Environment(gym.Env):
                task=None,
                disp=False,
                shared_memory=False,
-               hz=240,
-               use_egl=False):
+               hz=240):
     """Creates OpenAI Gym-style environment with PyBullet.
 
     Args:
@@ -58,15 +53,10 @@ class Environment(gym.Env):
       disp: show environment with PyBullet's built-in display viewer.
       shared_memory: run with shared memory.
       hz: PyBullet physics simulation step speed. Set to 480 for deformables.
-      use_egl: Whether to use EGL rendering. Only supported on Linux. Should get
-        a significant speedup in rendering when using.
 
     Raises:
       RuntimeError: if pybullet cannot load fileIOPlugin.
     """
-    if use_egl and disp:
-      raise ValueError('EGL rendering cannot be used with `disp=True`.')
-
     self.pix_size = 0.003125
     self.obj_ids = {'fixed': [], 'rigid': [], 'deformable': []}
     self.homej = np.array([-1, -0.5, 0.5, -0.5, -0.5, 0]) * np.pi
@@ -109,6 +99,7 @@ class Environment(gym.Env):
       if shared_memory:
         disp_option = p.SHARED_MEMORY
     client = p.connect(disp_option)
+
     file_io = p.loadPlugin('fileIOPlugin', physicsClientId=client)
     if file_io < 0:
       raise RuntimeError('pybullet: cannot load FileIO!')
@@ -118,18 +109,6 @@ class Environment(gym.Env):
           textArgument=assets_root,
           intArgs=[p.AddFileIOAction],
           physicsClientId=client)
-
-    self._egl_plugin = None
-    if use_egl:
-      assert sys.platform == 'linux', ('EGL rendering is only supported on '
-                                       'Linux.')
-      egl = pkgutil.get_loader('eglRenderer')
-      if egl:
-        self._egl_plugin = p.loadPlugin(egl.get_filename(),
-                                        '_eglRendererPlugin')
-      else:
-        self._egl_plugin = p.loadPlugin('eglRendererPlugin')
-      print('EGL renderering enabled.')
 
     p.configureDebugVisualizer(p.COV_ENABLE_GUI, 0)
     p.setPhysicsEngineParameter(enableFileCaching=0)
@@ -211,7 +190,6 @@ class Environment(gym.Env):
 
     # Reset end effector.
     self.ee.release()
-
     # Reset task.
     self.task.reset(self)
 
@@ -230,14 +208,18 @@ class Environment(gym.Env):
     Returns:
       (obs, reward, done, info) tuple containing MDP step data.
     """
-    if action is not None:
-      timeout = self.task.primitive(self.movej, self.movep, self.ee, **action)
 
-      # Exit early if action times out. We still return an observation
-      # so that we don't break the Gym API contract.
-      if timeout:
-        obs = self._get_obs()
-        return obs, 0.0, True, self.info
+    end = time.time() + 5
+    if action is not None:
+        timeout = self.task.primitive(self.movej, self.movep, self.ee, **action)
+
+        if timeout:
+            obs = {'color': (), 'depth': ()}
+            for config in self.agent_cams:
+              color, depth, _ = self.render_camera(config)
+              obs['color'] += (color,)
+              obs['depth'] += (depth,)
+            return obs, 0.0, True, self.info
 
     # Step simulator asynchronously until objects settle.
     while not self.is_static:
@@ -253,11 +235,6 @@ class Environment(gym.Env):
     obs = self._get_obs()
 
     return obs, reward, done, info
-
-  def close(self):
-    if self._egl_plugin is not None:
-      p.unloadPlugin(self._egl_plugin)
-    p.disconnect()
 
   def render(self, mode='rgb_array'):
     # Render only the color image from the first camera.
@@ -296,8 +273,6 @@ class Environment(gym.Env):
         projectionMatrix=projm,
         shadow=1,
         flags=p.ER_SEGMENTATION_MASK_OBJECT_AND_LINKINDEX,
-        # Note when use_egl is toggled, this option will not actually use openGL
-        # but EGL instead.
         renderer=p.ER_BULLET_HARDWARE_OPENGL)
 
     # Get color image.
@@ -458,74 +433,3 @@ class EnvironmentNoRotationsWithHeightmap(Environment):
                                            self.task.bounds, pix_size=0.003125)
     obs['heightmap'] = (cmap, hmap)
     return obs
-
-
-class ContinuousEnvironment(Environment):
-  """A continuous environment."""
-
-  def __init__(self, *args, **kwargs):
-    super().__init__(*args, **kwargs)
-
-    # Redefine action space, assuming it's a suction-based task. We'll override
-    # it in `reset()` if that is not the case.
-    self.position_bounds = gym.spaces.Box(
-        low=np.array([-1.0, -1.0, -1.0], dtype=np.float32),
-        high=np.array([1.0, 1.0, 1.0], dtype=np.float32),
-        shape=(3,),
-        dtype=np.float32
-    )
-    self.action_space = gym.spaces.Dict({
-        'move_cmd':
-            gym.spaces.Tuple(
-                (self.position_bounds,
-                 gym.spaces.Box(-1.0, 1.0, shape=(4,), dtype=np.float32))),
-        'suction_cmd': gym.spaces.Discrete(2),  # Binary 0-1.
-        'acts_left': gym.spaces.Discrete(1000),
-    })
-
-  def set_task(self, task):
-    super().set_task(task)
-
-    # Redefine the action-space in case it is a pushing task. At this point, the
-    # ee has been instantiated.
-    if self.task.ee == Spatula:
-      self.action_space = gym.spaces.Dict({
-          'move_cmd':
-              gym.spaces.Tuple(
-                  (self.position_bounds,
-                   gym.spaces.Box(-1.0, 1.0, shape=(4,), dtype=np.float32))),
-          'slowdown_cmd': gym.spaces.Discrete(2),  # Binary 0-1.
-          'acts_left': gym.spaces.Discrete(1000),
-      })
-
-  def get_ee_pose(self):
-    return p.getLinkState(self.ur5, self.ee_tip)[0:2]
-
-  def step(self, action=None):
-    if action is not None:
-      timeout = self.task.primitive(self.movej, self.movep, self.ee, action)
-
-      # Exit early if action times out. We still return an observation
-      # so that we don't break the Gym API contract.
-      if timeout:
-        obs = self._get_obs()
-        return obs, 0.0, True, self.info
-
-    # Step simulator asynchronously until objects settle.
-    while not self.is_static:
-      p.stepSimulation()
-
-    # Get task rewards.
-    reward, info = self.task.reward() if action is not None else (0, {})
-    task_done = self.task.done()
-    if action is not None:
-      done = task_done and action['acts_left'] == 0
-    else:
-      done = task_done
-
-    # Add ground truth robot state into info.
-    info.update(self.info)
-
-    obs = self._get_obs()
-
-    return obs, reward, done, info

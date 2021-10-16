@@ -33,13 +33,11 @@ class ConvMlpAgent:
   def __init__(self, name, task):
     self.name = name
     self.task = task
-    self.total_iter = 0
+    self.total_steps = 0
     self.pixel_size = 0.003125
     self.input_shape = (320, 160, 6)
     self.camera_config = cameras.RealSenseD415.CONFIG
     self.bounds = np.array([[0.25, 0.75], [-0.5, 0.5], [0, 0.28]])
-
-    self.total_iter = 0
 
     # A place to save pre-trained models.
     self.models_dir = os.path.join('checkpoints', self.name)
@@ -69,14 +67,21 @@ class ConvMlpAgent:
       object_quat_wxyz = (object_quat_xyzw[3], object_quat_xyzw[0],
                           object_quat_xyzw[1], object_quat_xyzw[2])
       t_world_object = quaternions.quat2mat(object_quat_wxyz)
-      t_world_object[0:3, 3] = np.array(object_position)
+      #t_world_object[0:3, 3] = np.array(object_position)
+      p0_position_2d = np.reshape(object_position, (3, 1))
+      t_world_object = np.append(t_world_object, p0_position_2d, axis=1)
+      arr = np.transpose(np.array([[0], [0], [0], [1]]))
+      t_world_object = np.append(t_world_object, arr, axis=0)
+
       t_worldaug_object = t_worldaug_world @ t_world_object
+      t_worldaug_object = t_worldaug_object[0:3, 0:3]
 
       object_quat_wxyz = quaternions.mat2quat(t_worldaug_object)
       if not preserve_theta:
         object_quat_xyzw = (object_quat_wxyz[1], object_quat_wxyz[2],
                             object_quat_wxyz[3], object_quat_wxyz[0])
-      object_position = t_worldaug_object[0:3, 3]
+      t_worldaug_object_two = t_worldaug_world @ t_world_object
+      object_position = t_worldaug_object_two[0:3, 3]
 
     object_xy = object_position[0:2]
     object_theta = -np.float32(
@@ -89,9 +94,9 @@ class ConvMlpAgent:
   def act_to_gt_act(self, act, t_worldaug_world=None):
     # dont update theta due to suction invariance to theta
     pick_se2, _, _ = self.extract_x_y_theta(
-        act['params']['pose0'], t_worldaug_world, preserve_theta=True)
+        act['pose0'], t_worldaug_world, preserve_theta=True)
     place_se2, _, _ = self.extract_x_y_theta(
-        act['params']['pose1'], t_worldaug_world, preserve_theta=True)
+        act['pose1'], t_worldaug_world, preserve_theta=True)
     return np.hstack((pick_se2, place_se2)).astype(np.float32)
 
   def get_data_batch(self, dataset, augment=True):
@@ -101,10 +106,10 @@ class ConvMlpAgent:
     batch_act = []
 
     for _ in range(self.batch_size):
-      obs, act, _ = dataset.random_sample()
+      (obs, act, _, _), _ = dataset.sample()
 
       # Get heightmap from RGB-D images.
-      configs = act['camera_config']
+      configs = self.camera_config
       colormap, heightmap = self.get_heightmap(obs, configs)
       # self.show_images(colormap, heightmap)
 
@@ -138,7 +143,7 @@ class ConvMlpAgent:
     batch_act = np.array(batch_act)
     return batch_obs, batch_act
 
-  def train(self, dataset, num_iter, writer, validation_dataset):
+  def train(self, dataset, writer, num_iter=5):
     """Train on dataset for a specific number of iterations."""
 
     validation_rate = 100
@@ -173,29 +178,12 @@ class ConvMlpAgent:
         tf.summary.scalar(
             'pick_loss',
             self.regression_model.metric.result(),
-            step=self.total_iter + i)
+            step=self.total_steps + i)
 
-      print(f'Train Iter: {self.total_iter + i} Loss: {loss0:.4f} Iter time:',
+      print(f'Train Iter: {self.total_steps + i} Loss: {loss0:.4f} Iter time:',
             time.time() - start)
 
-      if (self.total_iter + i) % validation_rate == 0:
-        print('Validating!')
-        tf.keras.backend.set_learning_phase(0)
-        batch_obs, batch_act = self.get_data_batch(
-            validation_dataset, augment=False)
-
-        # Compute valid loss
-        loss0 = self.regression_model.train_pick(
-            batch_obs, batch_act, pick_valid_step, validate=True)
-        with writer.as_default():
-          tf.summary.scalar(
-              'validation_pick_loss',
-              self.regression_model.val_metric.result(),
-              step=self.total_iter + i)
-
-        tf.keras.backend.set_learning_phase(1)
-
-    self.total_iter += num_iter
+    self.total_steps += num_iter
     self.save()
 
   def act(self, obs, gt_act, info):
@@ -306,11 +294,7 @@ class ConvMlpAgent:
 
 class PickPlaceConvMlpAgent(ConvMlpAgent):
 
-  def __init__(self, name, task):
+  def __init__(self, name, task, root_dir, n_rotations=12):
     super().__init__(name, task)
 
-    self.regression_model = Regression(
-        input_shape=self.input_shape,
-        preprocess=self.preprocess,
-        use_mdn=self.use_mdn)
-    self.regression_model.set_batch_size(self.batch_size)
+    self.regression_model = Regression()

@@ -42,3 +42,4 @@ names = {'dummy': DummyAgent,
          'gt_state_6d_3_step': GtState3Step6DAgent,
          'transporter-goal': GoalTransporterAgent,
          'transporter-goal-naive': GoalNaiveTransporterAgent}
+

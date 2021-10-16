@@ -81,7 +81,7 @@ class GtState2StepAgent(GtStateAgent):
 
     num_samples = 1000
     for _ in range(num_samples):
-      _, act, info = dataset.random_sample()
+      _, act, info = dataset.sample()
       t_worldaug_world, _ = self.get_augmentation_transform()
       obs = self.info_to_gt_obs(info, t_worldaug_world)
       obs = np.hstack((obs, self.act_to_gt_act(act, t_worldaug_world)[:3]))
@@ -96,7 +96,7 @@ class GtState2StepAgent(GtStateAgent):
         np.float32)
     self.place_model.set_normalization_parameters(obs_train_parameters)
 
-  def train(self, dataset, num_iter, writer, validation_dataset):
+  def train(self, dataset, num_iter, writer):
     """Train on dataset for a specific number of iterations."""
 
     if self.pick_model is None:
@@ -141,15 +141,15 @@ class GtState2StepAgent(GtStateAgent):
       self.metric(loss)
       with writer.as_default():
         tf.summary.scalar(
-            'gt_state_loss', self.metric.result(), step=self.total_iter + i)
+            'gt_state_loss', self.metric.result(), step=self.total_steps + i)
 
       if i % print_rate == 0:
         loss = np.float32(loss)
-        print(f'Train Iter: {self.total_iter + i} Loss: {loss:.4f} Iter time:',
+        print(f'Train Iter: {self.total_steps + i} Loss: {loss:.4f} Iter time:',
               time.time() - start)
         # utils.meshcat_visualize(self.vis, obs, act, info)
 
-    self.total_iter += num_iter
+    self.total_steps += num_iter
     self.save()
 
   def act(self, obs, info):
@@ -235,13 +235,15 @@ class GtState2StepAgent(GtStateAgent):
 class GtState3Step6DAgent(GtState6DAgent):
   """Agent which uses ground-truth state information -- useful as a baseline."""
 
-  def __init__(self, name, task):
+  def __init__(self, name, task, n_rotation=36):
     super().__init__(name, task)
 
     # Set up model.
     self.pick_model = None
     self.place_se2_model = None
     self.place_rpz_model = None
+
+    self.total_steps = 0
 
     self.pick_optim = tf.keras.optimizers.Adam(learning_rate=2e-4)
     self.place_se2_optim = tf.keras.optimizers.Adam(learning_rate=2e-4)
@@ -252,9 +254,7 @@ class GtState3Step6DAgent(GtState6DAgent):
 
   def init_model(self, dataset):
     """Initialize models, including normalization parameters."""
-    self.set_max_obs_vector_length(dataset)
-
-    _, _, info = dataset.random_sample()
+    _, _, info = dataset.sample()
     obs_vector = self.info_to_gt_obs(info)
 
     # Setup pick model
@@ -330,7 +330,7 @@ class GtState3Step6DAgent(GtState6DAgent):
         np.float32)
     self.place_rpz_model.set_normalization_parameters(obs_train_parameters)
 
-  def train(self, dataset, num_iter, writer, validation_dataset):
+  def train(self, dataset, writer, num_iter=1):
     """Train on dataset for a specific number of iterations."""
 
     if self.pick_model is None:
@@ -380,15 +380,15 @@ class GtState3Step6DAgent(GtState6DAgent):
       self.metric(loss)
       with writer.as_default():
         tf.summary.scalar(
-            'gt_state_loss', self.metric.result(), step=self.total_iter + i)
+            'gt_state_loss', self.metric.result(), step=self.total_steps + i)
 
       if i % print_rate == 0:
         loss = np.float32(loss)
-        print(f'Train Iter: {self.total_iter + i} Loss: {loss:.4f} Iter time:',
+        print(f'Train Iter: {self.total_steps + i} Loss: {loss:.4f} Iter time:',
               time.time() - start)
         # utils.meshcat_visualize(self.vis, obs, act, info)
 
-    self.total_iter += num_iter
+    self.total_steps += num_iter
     self.save()
 
   def act(self, obs, info):

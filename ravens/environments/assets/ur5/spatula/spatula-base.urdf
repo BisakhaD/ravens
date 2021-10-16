@@ -3,9 +3,6 @@
   <material name="DarkGrey">
     <color rgba="0.2 0.2 0.2 1.0"/>
   </material>
-  <material name="LightGrey">
-    <color rgba="0.8 0.8 0.8 1.0"/>
-  </material>
 
   <link name="baseLink">
     <contact>

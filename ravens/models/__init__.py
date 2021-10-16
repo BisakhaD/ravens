@@ -24,4 +24,5 @@ from ravens.models.regression import Regression
 from ravens.models.resnet import ResNet36_4s
 from ravens.models.resnet import ResNet43_8s
 from ravens.models.transport import Transport
+from ravens.models.transport_6dof import TransportHybrid6DoF
 from ravens.models.transport_goal import TransportGoal

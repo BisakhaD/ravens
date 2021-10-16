@@ -19,7 +19,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 from __future__ import unicode_literals
-
 import tensorflow as tf
 
 
@@ -190,17 +189,10 @@ def ResNet43_8s(input_shape,  # pylint: disable=invalid-name
                 prefix='',
                 cutoff_early=False):
   """Build Resent 43 8s."""
-  # TODO(andyzeng): rename to ResNet36_4s
-
   input_data = tf.keras.layers.Input(shape=input_shape)
 
-  x = tf.keras.layers.Conv2D(
-      64, (3, 3),
-      strides=(1, 1),
-      padding='same',
-      kernel_initializer='glorot_uniform',
-      name=prefix + 'conv1')(
-          input_data)
+  x = tf.keras.layers.Conv2D(64, (3, 3), strides=(1, 1), padding='same', kernel_initializer='glorot_uniform',
+                             name=prefix + 'conv1')(input_data)
   if include_batchnorm:
     x = tf.keras.layers.BatchNormalization(
         axis=batchnorm_axis, name=prefix + 'bn_conv1')(
@@ -223,32 +215,26 @@ def ResNet43_8s(input_shape,  # pylint: disable=invalid-name
         include_batchnorm=include_batchnorm)
     return input_data, x
 
-  x = conv_block(
-      x, 3, [64, 64, 64], stage=2, block=prefix + 'a', strides=(1, 1))
+  x = conv_block(x, 3, [64, 64, 64], stage=2, block=prefix + 'a', strides=(1, 1))
   x = identity_block(x, 3, [64, 64, 64], stage=2, block=prefix + 'b')
 
-  x = conv_block(
-      x, 3, [128, 128, 128], stage=3, block=prefix + 'a', strides=(2, 2))
+  x = conv_block(x, 3, [128, 128, 128], stage=3, block=prefix + 'a', strides=(2, 2))
   x = identity_block(x, 3, [128, 128, 128], stage=3, block=prefix + 'b')
 
-  x = conv_block(
-      x, 3, [256, 256, 256], stage=4, block=prefix + 'a', strides=(2, 2))
+  x = conv_block(x, 3, [256, 256, 256], stage=4, block=prefix + 'a', strides=(2, 2))
   x = identity_block(x, 3, [256, 256, 256], stage=4, block=prefix + 'b')
 
-  x = conv_block(
-      x, 3, [512, 512, 512], stage=5, block=prefix + 'a', strides=(2, 2))
+  x = conv_block(x, 3, [512, 512, 512], stage=5, block=prefix + 'a', strides=(2, 2))
   x = identity_block(x, 3, [512, 512, 512], stage=5, block=prefix + 'b')
 
-  x = conv_block(
-      x, 3, [256, 256, 256], stage=6, block=prefix + 'a', strides=(1, 1))
+  x = conv_block(x, 3, [256, 256, 256], stage=6, block=prefix + 'a', strides=(1, 1))
   x = identity_block(x, 3, [256, 256, 256], stage=6, block=prefix + 'b')
 
   x = tf.keras.layers.UpSampling2D(
       size=(2, 2), interpolation='bilinear', name=prefix + 'upsample_1')(
           x)
 
-  x = conv_block(
-      x, 3, [128, 128, 128], stage=7, block=prefix + 'a', strides=(1, 1))
+  x = conv_block(x, 3, [128, 128, 128], stage=7, block=prefix + 'a', strides=(1, 1))
   x = identity_block(x, 3, [128, 128, 128], stage=7, block=prefix + 'b')
 
   x = tf.keras.layers.UpSampling2D(
@@ -283,7 +269,6 @@ def ResNet36_4s(input_shape,  # pylint: disable=invalid-name
                 prefix='',
                 cutoff_early=False):
   """Build Resent 36 4s."""
-  # TODO(andyzeng): rename to ResNet36_4s
 
   input_data = tf.keras.layers.Input(shape=input_shape)
 
