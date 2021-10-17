@@ -1,24 +1,6 @@
 # Transporter Networks for Shelf Placement of FMCG Objects
 
-Ravens is a collection of simulated tasks in PyBullet for learning vision-based robotic manipulation, with emphasis on pick and place.
-It features a Gym-like API with 10 tabletop rearrangement tasks, each with (i) a scripted oracle that provides expert demonstrations (for imitation learning), and (ii) reward functions that provide partial credit (for reinforcement learning).
-
-<img src="docs/tasks.png"><br>
-
-(a) **block-insertion**: pick up the L-shaped red block and place it into the L-shaped fixture.<br>
-(b) **place-red-in-green**: pick up the red blocks and place them into the green bowls amidst other objects.<br>
-(c) **towers-of-hanoi**: sequentially move disks from one tower to another—only smaller disks can be on top of larger ones.<br>
-(d) **align-box-corner**: pick up the randomly sized box and align one of its corners to the L-shaped marker on the tabletop.<br>
-(e) **stack-block-pyramid**: sequentially stack 6 blocks into a pyramid of 3-2-1 with rainbow colored ordering.<br>
-(f) **palletizing-boxes**: pick up homogeneous fixed-sized boxes and stack them in transposed layers on the pallet.<br>
-(g) **assembling-kits**: pick up different objects and arrange them on a board marked with corresponding silhouettes.<br>
-(h) **packing-boxes**: pick up randomly sized boxes and place them tightly into a container.<br>
-(i) **manipulating-rope**: rearrange a deformable rope such that it connects the two endpoints of a 3-sided square.<br>
-(j) **sweeping-piles**: push piles of small objects into a target goal zone marked on the tabletop.<br>
-
-Some tasks require generalizing to unseen objects (d,g,h), or multi-step sequencing with closed-loop feedback (c,e,f,h,i,j).
-
-**Team:** this repository is developed and maintained by Bisakha Das, and submitted in partial fulfilment of the requirements for her Degree of Bachelor of Computer Science Engineering of the Nanyang Technological University 
+This repository is developed and maintained by Bisakha Das, and submitted in partial fulfilment of the requirements for her Degree of Bachelor of Computer Science Engineering of the Nanyang Technological University 
 
 This is the reference repository for the opriginal Transporter Networks paper, developed by [Andy Zeng](https://andyzeng.github.io/), [Pete Florence](http://www.peteflorence.com/), [Daniel Seita](https://people.eecs.berkeley.edu/~seita/), [Jonathan Tompson](https://jonathantompson.github.io/), and [Ayzaan Wahid](https://www.linkedin.com/in/ayzaan-wahid-21676148/). :
 
