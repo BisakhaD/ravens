@@ -1,4 +1,4 @@
-# Ravens - Transporter Networks
+# Transporter Networks for Shelf Placement of FMCG Objects
 
 Ravens is a collection of simulated tasks in PyBullet for learning vision-based robotic manipulation, with emphasis on pick and place.
 It features a Gym-like API with 10 tabletop rearrangement tasks, each with (i) a scripted oracle that provides expert demonstrations (for imitation learning), and (ii) reward functions that provide partial credit (for reinforcement learning).
@@ -18,14 +18,14 @@ It features a Gym-like API with 10 tabletop rearrangement tasks, each with (i) a
 
 Some tasks require generalizing to unseen objects (d,g,h), or multi-step sequencing with closed-loop feedback (c,e,f,h,i,j).
 
-**Team:** this repository is developed and maintained by [Andy Zeng](https://andyzeng.github.io/), [Pete Florence](http://www.peteflorence.com/), [Daniel Seita](https://people.eecs.berkeley.edu/~seita/), [Jonathan Tompson](https://jonathantompson.github.io/), and [Ayzaan Wahid](https://www.linkedin.com/in/ayzaan-wahid-21676148/). This is the reference repository for the paper:
+**Team:** this repository is developed and maintained by Bisakha Das, and submitted in partial fulfilment of the requirements for her Degree of Bachelor of Computer Science Engineering of the Nanyang Technological University 
+
+This is the reference repository for the opriginal Transporter Networks paper, developed by [Andy Zeng](https://andyzeng.github.io/), [Pete Florence](http://www.peteflorence.com/), [Daniel Seita](https://people.eecs.berkeley.edu/~seita/), [Jonathan Tompson](https://jonathantompson.github.io/), and [Ayzaan Wahid](https://www.linkedin.com/in/ayzaan-wahid-21676148/). :
 
 ### Transporter Networks: Rearranging the Visual World for Robotic Manipulation
 [Project Website](https://transporternets.github.io/)&nbsp;&nbsp;•&nbsp;&nbsp;[PDF](https://arxiv.org/pdf/2010.14406.pdf)&nbsp;&nbsp;•&nbsp;&nbsp;Conference on Robot Learning (CoRL) 2020
 
-*Andy Zeng, Pete Florence, Jonathan Tompson, Stefan Welker, Jonathan Chien, Maria Attarian, Travis Armstrong,<br>Ivan Krasin, Dan Duong, Vikas Sindhwani, Johnny Lee*
-
-**Abstract.** Robotic manipulation can be formulated as inducing a sequence of spatial displacements: where the space being moved can encompass an object, part of an object, or end effector. In this work, we propose the Transporter Network, a simple model architecture that rearranges deep features to infer spatial displacements from visual input—which can parameterize robot actions. It makes no assumptions of objectness (e.g. canonical poses, models, or keypoints), it exploits spatial symmetries, and is orders of magnitude more sample efficient than our benchmarked alternatives in learning vision-based manipulation tasks: from stacking a pyramid of blocks, to assembling kits with unseen objects; from manipulating deformable ropes, to pushing piles of small objects with closed-loop feedback. Our method can represent complex multi-modal policy distributions and generalizes to multi-step sequential tasks, as well as 6DoF pick-and-place. Experiments on 10 simulated tasks show that it learns faster and generalizes better than a variety of end-to-end baselines, including policies that use ground-truth object poses. We validate our methods with hardware in the real world.
+**Abstract.** Versatile grasping is one of the most basic forms of robotic manipulation. Versatile grasping's purpose is to gain great autonomy in dexterous manipulation tasks in an unstructured environment. An example of such an unstructured environment with scope of versatile pick and placement options is the task of shelf-placement, requiring high and low levels of perceptual reasoning. In this paper, we chose to extend the novel model structure of Transporter Networks beyond tabletop actions performed on extruded 2-dimensional solid objects utilizing 3 Degrees of Freedom (DoF). These extensions are based on the development of an agent capable of performing shelf-placement with 6-DoF movements on two distinct axis planes. This agent has been trained on a dataset of weighted Fast-Moving Consumer Goods (FMCG) objects, both un-textured and textured. Since the training was based on imitation learning, an expert agent was developed and implemented as well. The results obtained from training the 6-DoF agent on demonstrations provided by the expert agent confirm its successful extension to 6-DoF on two planes of axis with a 70% accuracy on FMCG products. The results further indicate the success of the agent on industry benchmarked untextured and textured Yale-CMU-Berkeley (YCB) objects. In addition to extending and contributing to existing research, this work also paves the way for future research with a real UR5e robot. 
 
 ## Installation
 
@@ -78,28 +78,28 @@ export PYTHONPATH=${PWD}
 **Step 1.** Generate training and testing data (saved locally). Note: remove `--disp` for headless mode.
 
 ```shell
-python ravens/demos.py --assets_root=./ravens/environments/assets/ --disp=True --task=block-insertion --mode=train --n=10
-python ravens/demos.py --assets_root=./ravens/environments/assets/ --disp=True --task=block-insertion --mode=test --n=100
+python ravens/demos.py --assets_root=./ravens/environments/assets/ --disp=True --task=shelf-placing --mode=train --n=10
+python ravens/demos.py --assets_root=./ravens/environments/assets/ --disp=True --task=shelf-placing --mode=test --n=100
 ```
 
 To run with shared memory, open a separate terminal window and run `python3 -m pybullet_utils.runServer`. Then add `--shared_memory` flag to the command above.
 
-**Step 2.** Train a model e.g., Transporter Networks model. Model checkpoints are saved to the `checkpoints` directory. Optional: you may exit training prematurely after 1000 iterations to skip to the next step.
+**Step 2.** Train the 6-DoF Transporter Networks model. Model checkpoints are saved to the `checkpoints` directory. Optional: you may exit training prematurely after 2000 iterations to skip to the next step, and later continue logging with ```shell --continue_logging True --log_ckpt 2000```.
 
 ```shell
-python ravens/train.py --task=block-insertion --agent=transporter --n_demos=10
+python ravens/train.py --task=shelf-placing --agent=transporter_6d --n_demos=10
 ```
 
-**Step 3.** Evaluate a Transporter Networks agent using the model trained for 1000 iterations. Results are saved locally into `.pkl` files.
+**Step 3.** Evaluate the 6-DoF Transporter Networks agent using the model trained for 2000 iterations. Results are saved locally into `.pkl` files.
 
 ```shell
-python ravens/test.py --assets_root=./ravens/environments/assets/ --disp=True --task=block-insertion --agent=transporter --n_demos=10 --n_steps=1000
+python ravens/test.py --assets_root=./ravens/environments/assets/ --disp=True --task=shelf-placing --agent=transporter_6d --n_demos=10 --n_steps=2000
 ```
 
 **Step 4.** Plot and print results.
 
 ```shell
-python ravens/plot.py --disp=True --task=block-insertion --agent=transporter --n_demos=10
+python ravens/plot.py --disp=True --task=shelf-placing --agent=transporter_6d --n_demos=10
 ```
 
 **Optional.** Track training and validation losses with Tensorboard.
@@ -107,31 +107,3 @@ python ravens/plot.py --disp=True --task=block-insertion --agent=transporter --n
 ```shell
 python -m tensorboard.main --logdir=logs  # Open the browser to where it tells you to.
 ```
-
-## Datasets and Pre-Trained Models
-
-Download our generated train and test datasets and pre-trained models.
-
-```shell
-wget https://storage.googleapis.com/ravens-assets/checkpoints.zip
-wget https://storage.googleapis.com/ravens-assets/block-insertion.zip
-wget https://storage.googleapis.com/ravens-assets/place-red-in-green.zip
-wget https://storage.googleapis.com/ravens-assets/towers-of-hanoi.zip
-wget https://storage.googleapis.com/ravens-assets/align-box-corner.zip
-wget https://storage.googleapis.com/ravens-assets/stack-block-pyramid.zip
-wget https://storage.googleapis.com/ravens-assets/palletizing-boxes.zip
-wget https://storage.googleapis.com/ravens-assets/assembling-kits.zip
-wget https://storage.googleapis.com/ravens-assets/packing-boxes.zip
-wget https://storage.googleapis.com/ravens-assets/manipulating-rope.zip
-wget https://storage.googleapis.com/ravens-assets/sweeping-piles.zip
-```
-
-The MDP formulation for each task uses transitions with the following structure:
-
-**Observations:** raw RGB-D images and camera parameters (pose and intrinsics).
-
-**Actions:** a primitive function (to be called by the robot) and parameters.
-
-**Rewards:** total sum of rewards for a successful episode should be =1.
-
-**Info:** 6D poses, sizes, and colors of objects.
