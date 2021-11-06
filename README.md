@@ -2,7 +2,7 @@
 
 This repository is developed and maintained by Bisakha Das, and submitted in partial fulfilment of the requirements for her Degree of Bachelor of Computer Science Engineering of the Nanyang Technological University 
 
-This is the reference repository for the opriginal Transporter Networks paper, developed by [Andy Zeng](https://andyzeng.github.io/), [Pete Florence](http://www.peteflorence.com/), [Daniel Seita](https://people.eecs.berkeley.edu/~seita/), [Jonathan Tompson](https://jonathantompson.github.io/), and [Ayzaan Wahid](https://www.linkedin.com/in/ayzaan-wahid-21676148/): Transporter Networks: Rearranging the Visual World for Robotic Manipulation
+This is the reference repository for the original Transporter Networks paper, developed by [Andy Zeng](https://andyzeng.github.io/), [Pete Florence](http://www.peteflorence.com/), [Daniel Seita](https://people.eecs.berkeley.edu/~seita/), [Jonathan Tompson](https://jonathantompson.github.io/), and [Ayzaan Wahid](https://www.linkedin.com/in/ayzaan-wahid-21676148/): Transporter Networks: Rearranging the Visual World for Robotic Manipulation
 [Project Website](https://transporternets.github.io/)&nbsp;&nbsp;•&nbsp;&nbsp;[PDF](https://arxiv.org/pdf/2010.14406.pdf)&nbsp;&nbsp;•&nbsp;&nbsp;
 
 **Abstract.** 
